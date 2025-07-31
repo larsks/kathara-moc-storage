@@ -1,0 +1,79 @@
+metadata:
+  description: Reproduce MOC storage networking
+  author: Lars Kellogg-Stedman
+
+networks:
+  net172:
+    autogateway: false
+    cidr: 172.16.96.0/24
+  net7_0:
+    autogateway: false
+    cidr: 10.7.0.0/20
+  net8_0:
+    autogateway: false
+    cidr: 10.8.0.0/18
+  net8_1:
+    autogateway: false
+    cidr: 10.8.64.0/18
+  net8_2:
+    autogateway: false
+    cidr: 10.8.128.0/18
+  net8_3:
+    autogateway: false
+    cidr: 10.8.192.0/18
+
+
+common:
+  startup: |
+    cat /shared/hosts >> /etc/hosts
+
+hosts:
+  router0:
+    autogateway: false
+    interfaces:
+    - network: net172
+  router1:
+    autogateway: false
+    interfaces:
+      - network: net7_0
+      - network: net8_0
+      - network: net8_1
+      - network: net8_2
+      - network: net8_3
+  node0:
+    autogateway: false
+    routes:
+    - default via 172.16.96.1
+    # 10.7.0.0/20 nexthop via 10.8.192.1 nexthop via 10.8.128.1 nexthop via 10.8.64.1 nexthop via 10.8.0.1
+    startup: |
+      route add -net 10.7.0.0 netmask 255.255.240.0 gw 10.8.192.1
+      route add -net 10.7.0.0 netmask 255.255.240.0 gw 10.8.128.1
+      route add -net 10.7.0.0 netmask 255.255.240.0 gw 10.8.64.1
+      route add -net 10.7.0.0 netmask 255.255.240.0 gw 10.8.0.1
+    interfaces:
+    - network: net172
+    - network: net8_0
+      autoip: false
+      address:
+      - 10.8.3.56
+    - network: net8_1
+      autoip: false
+      address:
+      - 10.8.68.221
+    - network: net8_2
+      autoip: false
+      address:
+      - 10.8.129.127
+    - network: net8_3
+      autoip: false
+      address:
+      - 10.8.196.51
+  node1:
+    interfaces:
+    - network: net7_0
+  node2:
+    interfaces:
+    - network: net7_0
+  node3:
+    interfaces:
+    - network: net7_0
